@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllMenuItems, getPageByUri } from '../../lib/api';
+
+export async function getStaticPaths() {
+    const menuItems = await getAllMenuItems();
+    return menuItems
+        .map(({uri}) => uri.split("/").filter((slug) => slug !== ""))
+        .filter((slugs) => slugs.length === 2)
+        .map((slugs) => ({
+            params: {
+                parentSlug: slugs[0],
+                slug: slugs[1],
+            }
+        }));
+}
+
+// 
+const { parentSlug, slug } = Astro.params;
+let uri = "/"
+if (parentSlug) {
+    console.log(parentSlug);
+    uri += `${parentSlug}/`;
+}
+if (slug) {
+    console.log(slug);
+    uri += `${slug}/`;
+}
+const page = await getPageByUri(uri);
+---
+<Layout title={page.title}>
+    <div class="flex flex-col p-10 ">
+        <div class="mb-5 text-4xl font-bold mx-auto">{page.title ?? "no title :("}</div>
+        <article class="prose lg:prose-xl mx-auto" set:html={page.content} />
+    </div>
+</Layout>
